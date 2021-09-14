@@ -2,16 +2,17 @@ const { Client } = require('whatsapp-web.js');
 const express = require('express');
 const path = require('path');
 const app = express();
+const http = require('http');
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {cors: {origin: "*"}});
 const qrcode = require('qrcode');
 const fs = require('fs');
 
-
 const kategori = require('./models/kategori');
 const product = require('./models/product');
 
 const chatReply = require('./helpers/replyChat');
+
 // Mongoose Connection
 
 var mongoose = require('mongoose');
@@ -49,7 +50,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 
-app.get('/', (req, res)=>{
+app.get('/', async (req, res)=>{
     res.render('index', {
         title: 'Chatbot-WhatsApp-API',
         root: __dirname
@@ -88,7 +89,7 @@ app.post('/add-kategori', (req, res)=>{
             message: result.message,
 			_id: result._id,
 			reqeust: {
-				type: 'GET',
+				type: 'POST',
 			}
 		}
 	});
@@ -122,9 +123,11 @@ app.post('/add-product', async (req, res)=>{
 		createdProduct: {
 			keyword: result.keyword,
             message: result.message,
+            price: result.price,
+            currency: result.currency,
 			_id: result._id,
 			reqeust: {
-				type: 'GET',
+				type: 'POST',
 			}
 		}
 	});
@@ -141,7 +144,21 @@ app.post('/add-product', async (req, res)=>{
       await category.save()
 })
 
-const client = new Client({ puppeteer: { headless: true }, session: sessionCfg });
+const client = new Client({
+    restartOnAuthFail: true, 
+    puppeteer: { 
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process', // <- this one doesn't works in Windows
+            '--disable-gpu'
+        ],
+    }, session: sessionCfg });
 
 
 client.on('authenticated', (session) => {
@@ -157,21 +174,22 @@ client.on('authenticated', (session) => {
 
 client.on('message', async msg => {
     const keyword = msg.body;
-    const replymsg = await chatReply.getKeywords(keyword);
-    const replyIndex = await chatReply.getKeywordAndProduct(keyword)
-
+    const replyKategori = await chatReply.getKeywords(keyword);
+    const replyIndex = await chatReply.getKeywordAndProduct(keyword);
+    const replyProduct = await chatReply.productReply(keyword);
+    const totalPrice = await chatReply.productTotal(keyword);
     switch (keyword) {
-        case replymsg !== false:
-            msg.reply(replymsg);
+        case replyKategori !== false:
+            msg.reply(replyKategori);
             break;
-        // case 'Cola':
-        //     msg.reply(replymsg)
-        //     break;
-        // case 'Sprite':
-        //     msg.reply(replymsg)
-        //     break;
+        case replyProduct !== false:
+            msg.reply(replyProduct)
+            break;
+        case totalPrice !== false:
+            msg.reply(totalPrice)
+            break;
         default:
-            msg.reply(replymsg)
+            msg.reply(replyKategori)
             break;
     }
     // if(replymsg !== false){
