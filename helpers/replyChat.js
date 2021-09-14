@@ -46,12 +46,11 @@ const getKeywords = async (keyword) => {
         prod = docs.product
     })
     
-
     if(reply.length > 0){
         if(prod.length > 0){
             return `${reply[0].message}\n ${prod[0].uuid}.${prod[0].keyword}\n ${prod[1].uuid}.${prod[1].keyword}`
         }
-        return `Sorry product for ${keyword} is empty`   
+        return `Sorry product for *${keyword}* is empty`   
     }else if(productMessage){
         return productMessage
         // if(keyword == replyProduct[0].keyword){
@@ -60,7 +59,7 @@ const getKeywords = async (keyword) => {
         //     return `Failed`
         // }
     }
-        return 'Invalid Keyword'
+    return 'Invalid Keyword'
     
 }
 
@@ -74,13 +73,13 @@ const productReply = async (keyword) =>{
     // Condition for keyword product 
         if(replyProduct.length > 0){
             if(keyword == replyProduct[0].keyword){
-                return `${replyProduct[0].message}? Name: ${replyProduct[0].keyword}\nPrice: $${replyProduct[0].price}\nCurrency: ${replyProduct[0].currency}`
+                return `${replyProduct[0].message}? *Name :* ${replyProduct[0].keyword}\n*Price :* $${replyProduct[0].price}\n*Currency :* ${replyProduct[0].currency}`
             }
             return `Keyword Not Found`
         }else if(tempProduct.length > 0){
             return Totalproduct
         }
-    return `Product for this keyword ${keyword} not found`
+    return `Product for this keyword *${keyword}* not found`
 }
 
 const productTotal = async (keyword) => {
@@ -92,7 +91,7 @@ const productTotal = async (keyword) => {
             return 'Keyword should be a number'
         }else{
             const total = tempProduct[0].price * keyword;
-            return `Product yang anda beli sebanyak ${keyword}\n Detail Product:\n Product Name : ${tempProduct[0].keyword}\n Price : ${tempProduct[0].price}\n Currency: ${tempProduct[0].currency}\n Total: $${total} \n Apakah anda ingin melanjutkan transaksi?`
+            return `Product yang anda beli sebanyak *${keyword}*\n _*Detail Product Anda :*_\n *Product Name :* ${tempProduct[0].keyword}\n *Price :* $${tempProduct[0].price}\n *Currency:* ${tempProduct[0].currency}\n *Total :* $${total} \n Apakah anda ingin melanjutkan transaksi? *Yes/No*`
         }
     }
 }
